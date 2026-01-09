@@ -1,15 +1,25 @@
 #define F_CPU 16000000UL
 #include <avr/io.h>
-#include <util/delay.h>
+#include <avr/interrupt.h>
 #include <stdio.h>
+
+// Global Variables
+volatile uint32_t ms_counter = 0;
+
+ISR(TIMER1_COMPA_vect) {  // When the Timer1 Compare Match A interrupt occurs (every 250 ticks)
+  ms_counter++;           // Jump to this code and increment the ms_counter correctly.
+}
 
 // Function Prototypes
 void ADC_init(void);
-void UART_init(void);
 uint16_t ADC_read(void);
+
+void UART_init(void);
 void UART_sendchar(char c);
 void UART_print(const char* str);  // I put const to make sure the function does not modify the string.
 void UART_printint(int x);
+
+void Timer1_init(void);
 
 int main(void) {
 
@@ -17,22 +27,32 @@ int main(void) {
   uint16_t adc_result;
   float voltage;
   float tempC;
+  uint32_t now;
+  uint32_t last_time = 0;
 
-  ADC_init();   // Initialize ADC.
-  UART_init();  // Initalize UART.
+  Timer1_init();  // Initialize Timer1.
+  ADC_init();     // Initialize ADC.
+  UART_init();    // Initalize UART.
+  sei();          // Enables interrupts.
 
   while (1) {
-    adc_result = ADC_read();                // Gets the value from ADC_read().
-    voltage = adc_result * (5.0 / 1023.0);  // Convert adc_result to voltage.
-    tempC = (voltage - 0.5) / 0.01;         // Convert voltage to temperature in Celsius.
 
-    UART_print("Temperature is ");
-    UART_printint((int)tempC);
-    UART_print(" C\r\n");
+    cli();  // Allows the ISR to interrupt mid-read.
+    now = ms_counter;
+    sei();
 
-    _delay_ms(500);  // 500ms delay between readings.
+    if ((now - last_time) >= 1000) {          // Checks if a second has passed by.
+      adc_result = ADC_read();                // Gets the value from ADC_read().
+      voltage = adc_result * (5.0 / 1023.0);  // Convert adc_result to voltage.
+      tempC = (voltage - 0.5) / 0.01;         // Convert voltage to temperature in Celsius.
+
+      UART_print("Temperature is ");
+      UART_printint((int)tempC);
+      UART_print(" C\r\n");
+
+      last_time = now;
+    }
   }
-
   return 0;
 }
 
@@ -41,6 +61,12 @@ void ADC_init(void) {
   ADMUX = (1 << REFS0);  // Sets bit 6 of ADMUX to 1. REFS1:0 = 01, which selects 5V as the reference voltage.
   // Not including (X << MUX?), MUX4:0 = 0000, A0 is the input selected.
   ADCSRA = (1 << ADEN) | (1 << ADPS2) | (1 << ADPS1) | (1 << ADPS0);  // ADEN turns ADC on, ADPS2:0 set the prescaler bits. 111 = 128 prescaler.
+}
+
+uint16_t ADC_read(void) {
+  ADCSRA |= (1 << ADSC);           // |= sets bits, = overwrites bits. Changes ADSC without overwriting others.
+  while (ADCSRA & (1 << ADSC)) {}  // Wait for the conversion to finish.
+  return ADCL | (ADCH << 8);       // Combining high and low after the conversion is confirmed to be complete.
 }
 
 void UART_init(void) {
@@ -81,8 +107,11 @@ void UART_printint(int x) {
   }
 }
 
-uint16_t ADC_read(void) {          // uint16_t will return the needed 16 bit result.
-  ADCSRA |= (1 << ADSC);           // |= sets bits, = overwrites bits. Changes ADSC without overwriting others.
-  while (ADCSRA & (1 << ADSC)) {}  // Wait for the conversion to finish.
-  return ADCL | (ADCH << 8);     // Combining high and low after the conversion is confirmed to be complete.
+void Timer1_init(void) {
+  TCCR1A = 0;
+  TCCR1B = 0;                           // Fully resets the timer for initialziation.
+  TCCR1B |= (1 << WGM12);               // Set Timer1 to CTC mode.
+  OCR1A = 249;                          // 0 -> 249 = 250 ticks per interrupt.
+  TIMSK1 |= (1 << OCIE1A);              // Enable Timer1 compare match A interrupt.
+  TCCR1B |= (1 << CS11) | (1 << CS10);  // Prescaler = 64.
 }
