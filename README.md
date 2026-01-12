@@ -2,11 +2,11 @@
 
 Features:
 - Hardware timer with a software millisecond counter implementation.
-- Zero reliance on flaot types due to the utilization of fixed-point mathematics.
 - Direct ADC initialization and reading for 10-bit measurements.
 - Continuous temperature calculation from the TMP36 voltage reading.
 - UART communication to display real-time temperature on a PC.
 - No Arduino handicaps such as serial objects or libraries.
+- Fixed point mathematics.
 - A noise filter.
 
 Learning Goals:
