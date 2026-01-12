@@ -25,8 +25,7 @@ int main(void) {
 
   // Variable Space Reservation
   uint16_t adc_result;
-  float voltage;
-  float tempC;
+  int16_t tempC_x10;
   uint32_t now;
   uint32_t last_time = 0;
 
@@ -41,13 +40,14 @@ int main(void) {
     now = ms_counter;
     sei();
 
-    if ((now - last_time) >= 1000) {          // Checks if a second has passed by.
-      adc_result = ADC_read();                // Gets the value from ADC_read().
-      voltage = adc_result * (5.0 / 1023.0);  // Convert adc_result to voltage.
-      tempC = (voltage - 0.5) / 0.01;         // Convert voltage to temperature in Celsius.
+    if ((now - last_time) >= 1000) {         // Checks if a second has passed by.
+      adc_result = ADC_read();               // Gets the value from ADC_read().
+      tempC_x10 = (int16_t)adc_result + 50;  // Convert voltage to temperature in Celsius, x10 represents the SCALE = 10. Offset is 5 degrees.
 
       UART_print("Temperature is ");
-      UART_printint((int)tempC);
+      UART_printint(tempC_x10 / 10);
+      UART_print(".");
+      UART_printint(abs(tempC_x10 % 10));
       UART_print(" C\r\n");
 
       last_time = now;
