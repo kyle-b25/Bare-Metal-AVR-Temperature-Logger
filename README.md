@@ -2,6 +2,7 @@
 
 Features:
 - Hardware timer with a software millisecond counter implementation.
+- Zero reliance on flaot types due to the utilization of fixed-point mathematics.
 - Direct ADC initialization and reading for 10-bit measurements.
 - Continuous temperature calculation from the TMP36 voltage reading.
 - UART communication to display real-time temperature on a PC.
@@ -14,8 +15,8 @@ Learning Goals:
 - Implementing UART transmission routines from scratch.
 - Efficiency in navigating various datasheets.
 - Building a real-time sensor-reading loop in embedded C.
+- Stronger comprehension of fixed-point mathematics.
 
 Future Goals:
-- Implement the option to switch between Celsius, Farenheit, and Kelvin.
-- LCD screen implementation.
-- Removing reliance on float types by adding fixed-point mathematics.
+- Design and implement and temperature unit (C, F, K) switching system through button input.
+- Display current temperature mode on LCD screen on device.
