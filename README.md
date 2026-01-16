@@ -26,3 +26,4 @@ Future Goals:
 - Debouncing the button properly.
 - Store the last selected unit in EEPROM, so it remembers user-preferance after the power is shut off.
 - Take the average of a specifc number of readings before displaying for increased accuracy.
+- Synchronize LCD functions with time-logic based system and remove reliance on delays. Not sure if a good decision or possible yet.
