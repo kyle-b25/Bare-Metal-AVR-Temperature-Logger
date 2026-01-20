@@ -1,4 +1,5 @@
 #define F_CPU 16000000UL
+#define DEBOUNCE_MS 20
 #define LCD_RS PB4  // D12
 #define LCD_E PB3   // D11
 #define LCD_D4 PD5  // D5 → DB4
@@ -19,6 +20,12 @@ typedef enum {
   UNIT_K   // 2
 } temp_unit_t;
 
+// Structs
+typedef struct {
+  uint8_t stable_state;     // Debounced button (gives 0 or 1).
+  uint8_t last_raw_state;   // Last instantaneous read.
+  uint32_t last_change_ms;  // When the raw state was last changed.
+} button_t;
 
 // Global Variables
 volatile uint32_t ms_counter = 0;
@@ -45,6 +52,8 @@ void Timer1_init(void);
 
 // BTN Function Prototypes
 void BTN_init(void);
+void BTN_update(button_t* btn, uint32_t curr_ms);
+uint8_t BTN_raw_read(void);
 
 // LCD Function Prototypes
 void LCD_init(void);
@@ -65,8 +74,13 @@ int main(void) {
   uint16_t tempDisplay_x10;
   uint32_t last_time = 0;
   uint32_t now;
-  uint8_t last_btn_state = 1;  // Pull-Up means release = high. So it starts "off."
-  uint8_t curr_btn_state;
+  uint8_t last_stable_btn = 0;
+  button_t unit_btn = {
+    .stable_state = 0,
+    .last_raw_state = 0,
+    .last_change_ms = 0
+  };
+
 
   LCD_preinit();                 // Initialize MCU with LCD.
   LCD_init();                    // Initialize LCD.
@@ -83,14 +97,14 @@ int main(void) {
     now = ms_counter;
     sei();
 
-    curr_btn_state = (PIND & (1 << PIND7));  // = 0, low. != 0, high.
+    BTN_update(&unit_btn, now);
 
-    if (last_btn_state && !curr_btn_state) {  // Detects if button was pressed.
-      currentUnit = (currentUnit + 1) % 3;    // Confines currentUnit to 0, 1, or 2 representing C, F, K respectively.
-      LCD_update_mode(currentUnit);           // Refresh display immediately
+    if (unit_btn.stable_state && !last_stable_btn) {  // Detect button press.
+      currentUnit = (currentUnit + 1) % 3;            // Select the next temperature mode.
+      LCD_update_mode(currentUnit);                   // Refresh display immediately
     }
 
-    last_btn_state = curr_btn_state;
+    last_stable_btn = unit_btn.stable_state;
 
     if ((now - last_time) >= 1000) {         // Checks if a second has passed by.
       adc_result = ADC_read();               // Gets the value from ADC_read().
@@ -194,6 +208,23 @@ void Timer1_init(void) {
 void BTN_init(void) {
   DDRD &= ~(1 << DDD7);    // Selects Digital Pin 7
   PORTD |= (1 << PORTD7);  // Enables Pull-Up
+}
+
+void BTN_update(button_t* btn, uint32_t curr_ms) {
+  uint8_t raw = BTN_raw_read();
+
+  if (raw != btn->last_raw_state) {
+    btn->last_raw_state = raw;
+    btn->last_change_ms = curr_ms;
+  }
+
+  if ((curr_ms - btn->last_change_ms) >= DEBOUNCE_MS) {
+    btn->stable_state = raw;
+  }
+}
+
+uint8_t BTN_raw_read(void) {
+  return !(PIND & (1 << PD7));  // Inverted with "!" because pull-up means LOW when pressed.
 }
 
 void LCD_init(void) {
