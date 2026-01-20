@@ -8,6 +8,7 @@ Features:
 - Displays the current temperature mode and instructions on an LCD screen.
 - A push-button that switches the current selected units for temperature. C, F, or K.
 - No Arduino handicaps such as serial objects or libraries.
+- Non-blocking button debounce algorithm, enabling accurate input detection.
 - Fixed point mathematics.
 - A noise filter.
 
@@ -21,9 +22,9 @@ Learning Accomplishments:
 - Built a real-time sensor-reading loop in embedded C.
 - Stronger comprehension of fixed-point mathematics.
 - Developed skills in breadboard problem solving.
+- Learned how to handle time-based events in microcontrollers without blocking main program flow.
 
 Future Goals:
-- Debouncing the button properly.
 - Store the last selected unit in EEPROM, so it remembers user-preferance after the power is shut off.
 - Take the average of a specifc number of readings before displaying for increased accuracy.
 - Synchronize LCD functions with time-logic based system and remove reliance on delays. Not sure if a good decision or possible yet.
