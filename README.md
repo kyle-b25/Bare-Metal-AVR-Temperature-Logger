@@ -1,4 +1,9 @@
 # Bare-Metal-AVR-Temperature-Logger
+- Just for some important background, the files have been moved to Microchip Studio. The .hex file from Microchip Studio, AVRDude.exe, and AVRDude.conf,
+- were launched in command prompt because Arduino IDE makes the use of header files complicated. Organized code is a must have.
+
+C:\Users\BLANK>
+"C:\Users\-\Desktop\avrdude.exe" -C"C:\Users\-\Desktop\avrdude.conf" -c arduino -P COM4 -p m328p -b 115200 -D -U flash:w:"C:\Users\-\Desktop\Arduino\MicrochipStudioHex\Temp_Logger.hex":i
 
 Features:
 - Hardware timer with a software millisecond counter implementation.
