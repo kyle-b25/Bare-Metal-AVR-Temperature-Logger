@@ -33,3 +33,13 @@ Future Goals:
 - Store the last selected unit in EEPROM, so it remembers user-preferance after the power is shut off.
 - Take the average of a specifc number of readings before displaying for increased accuracy.
 - Synchronize LCD functions with time-logic based system and remove reliance on delays. Not sure if a good decision or possible yet.
+
+Hardware List:
+- TMP36 Sensor
+- Arduino Uno R3 (ATmega328P)
+- 21 Wires
+- 100uF Capacitor
+- 10 kOhm resistor
+- LCD Screen
+- Pushbutton
+- Breadboard
